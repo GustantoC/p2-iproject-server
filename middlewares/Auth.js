@@ -10,10 +10,11 @@ async function Auth(req, res, next) {
     }
     let getUser = await User.findOne({ where: { email: response.email } })
     if (!getUser) {
-      throw { name: "401", message: "Invalid email/password" }
+      throw { name: "401", message: "Invalid input/password" }
     }
     req.user = {
       id: getUser.id,
+      username: getUser.username,
       email: getUser.email
     }
     next()
