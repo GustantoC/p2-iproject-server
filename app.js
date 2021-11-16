@@ -1,6 +1,6 @@
-if (process.env.NODE_ENV === 'production') {
+// if (process.env.NODE_ENV === 'production') {
   require('dotenv').config()
-}
+// }
 var CronJob = require('cron').CronJob;
 const express = require('express')
 const cors = require('cors')
@@ -16,9 +16,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/', router)
 
 var job = new CronJob({
-  cronTime: '0 1 * * *', // every 24 hours
+  cronTime: '0 1 * * *', 
   onTick: function () {
-    
+    // every 24 hours
   },
   start: true,
   timezone: "America/Sao_Paulo"
