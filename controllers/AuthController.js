@@ -57,20 +57,25 @@ class AuthController {
 
   static async login(req, res, next) {
     try {
-      if ((!req.body.username || !req.body.email) || !req.body.password) {
-        throw { name: "400", message: "Please input Username and Password" }
+      if (!req.body.userinput || !req.body.password) {
+        throw { name: "400", message: "Please provide username/email and Password" }
       }
-      let usernameInput = req.body.username
+      let searchOptions = {
+        username: req.body.userinput
+      }
+      if(req.body.userinput.includes('@')){
+        searchOptions = {
+          email: req.body.userinput
+        }
+      }
       let passwordInput = req.body.password
       let user = await User.findOne(
         {
-          where: {
-            username: usernameInput
-          }
+          where: searchOptions
         }
       )
       if (user && HashingHelper.comparePassword(passwordInput, user.password)) {
-        let tokenPayload = { id: user.id, username: user.username }
+        let tokenPayload = { id: user.id, username: user.username, email: user.email }
         let access_token = TokenHelper.signPayload(tokenPayload)
         res.status(200).json({ access_token })
       } else {
@@ -87,14 +92,15 @@ class AuthController {
       if (!access_token) {
         throw { name: "400", message: "Please provide an access_token" }
       }
-      const payload = TokenHelper.returnPayload(access_token)
+      const payload = TokenHelper.verifyToken(access_token)
       const response = await User.findOne({ where: { username: payload.username } })
       if (!response) {
         throw { name: "404", message: "User not found" }
       }
       req.user = {
         id: response.id,
-        username: response.username
+        username: response.username,
+        email: response.email
       }
       res.status(200).json(req.user)
     } catch (err) {
