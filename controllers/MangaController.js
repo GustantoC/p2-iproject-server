@@ -19,15 +19,17 @@ class MangaController {
               MalId: manga.mal_id,
               title: manga.title,
               imageUrl: manga.image_url,
-              status: currStatus
+              status: currStatus,
+              score: manga.score
             }
           })
+
           Manga.bulkCreate(listMangas)
         })
         .catch(({ response }) => {
           console.log(response.data);
         })
-      res.status(200).json(listMangas)
+      res.status(200).json({ message: "Top 50 manga inserted successfully" })
     } catch (error) {
       next(error)
     }
@@ -36,25 +38,23 @@ class MangaController {
   static async insertNewManga(req, res, next) {
     try {
       let { mal_id } = req.body
-      let malData = await axios({
+      let resp = await axios({
         method: 'GET',
-        url: `https://api.jikan.moe/v3/manga/${mal_id}`
+        url: `https://api.jikan.moe/v3/manga/${Number(mal_id)}`
       })
-        .then(({ data }) => {
-          let mangaData = malData.data
-          let newManga = {
-            MalId: mangaData.mal_id,
-            title: mangaData.title,
-            imageUrl: mangaData.image_url,
-            status: mangaData.publishing ? 'ongoing' : 'completed'
-          }
-          Manga.create(newManga)
-        })
-        .catch(({ response }) => {
-          console.log(response.data);
-        })
-      res.status(201).json(newMangaId)
+      let mangaData = resp.data
+      let newManga = {
+        MalId: mangaData.mal_id,
+        title: mangaData.title,
+        imageUrl: mangaData.image_url,
+        status: mangaData.publishing ? 'ongoing' : 'completed',
+        score: mangaData.score
+      }
+      let insertManga = await Manga.create(newManga)
+      console.log(insertManga)
+      res.status(201).json("New manga created")
     } catch (error) {
+      console.log(error)
       next(error)
     }
   }

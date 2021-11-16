@@ -13,7 +13,7 @@ router.post('/register', AuthController.register)
 router.get('/verifyToken', AuthController.verifyToken)
 router.get('/top50Mangas',MangaController.topMangas)
 router.use(Authenticate)
-router.post('/manga',MangaController.insertNewManga)
+router.post('/insertManga',MangaController.insertNewManga)
 router.use(ErrorHandler)
 
 module.exports = router

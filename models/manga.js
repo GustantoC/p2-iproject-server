@@ -35,6 +35,11 @@ module.exports = (sequelize, DataTypes) => {
     status: {
       type: DataTypes.STRING,
       defaultValue: 'ongoing'
+    },
+    score: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+      allowNull: false
     }
   }, {
     sequelize,
