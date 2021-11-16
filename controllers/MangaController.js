@@ -51,10 +51,14 @@ class MangaController {
         score: mangaData.score
       }
       let insertManga = await Manga.create(newManga)
-      console.log(insertManga)
-      res.status(201).json("New manga created")
+      res.status(201).json({message: "Manga inserted successfully", mangaDetail: newManga})
     } catch (error) {
       console.log(error)
+      if (error.isAxiosError) {
+        if(error.response.status == 404){
+          error = { name: "404", message: "Manga not found" }
+        }
+      }
       next(error)
     }
   }
