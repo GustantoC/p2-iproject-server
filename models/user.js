@@ -2,6 +2,7 @@
 const {
   Model
 } = require('sequelize');
+const HashingHelper = require('../helpers/HashingHelper')
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -26,6 +27,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         notNull: {
           msg: 'Please input username'
+        },
+        isAlphanumeric: {
+          msg: 'Username can only contain letters and numbers'
         }
       }
     },
@@ -40,8 +44,31 @@ module.exports = (sequelize, DataTypes) => {
           msg: 'Please input password'
         }
       }
+    },
+    email:{
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        msg: 'Email already used'
+      },
+      validate: {
+        notEmpty: {
+          msg: 'Please input email'
+        },
+        notNull: {
+          msg: 'Please input email'
+        },
+        isEmail: {
+          msg: 'Invalid email format'
+        }
+      }
     }
   }, {
+    hooks: {
+      beforeCreate: (user) => {
+        user.password = HashingHelper.hashPassword(user.password)
+      }
+    },
     sequelize,
     modelName: 'User',
   });

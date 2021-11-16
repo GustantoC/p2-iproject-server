@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       MangaUser.belongsTo(models.User, { foreignKey: 'UserId' });
+      // MangaUser.belongsTo(models.Manga, { uniqueKey: 'MalId' });
     }
   };
   MangaUser.init({
