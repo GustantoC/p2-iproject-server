@@ -18,8 +18,7 @@ class AuthController {
       let randomPass = (Math.random() + 1).toString(36).substring(2);
       const [response, isCreated] = await User.findOrCreate({
         where: {
-          username: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ''),
-          email: email
+          username: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')
         },
         defaults: {
           password: randomPass,
@@ -39,16 +38,15 @@ class AuthController {
 
   static async register(req, res, next) {
     try {
-      if (!req.body.username || !req.body.password || !req.body.email) {
-        throw { name: "400", message: "Please input Username, Email and Password" }
+      if (!req.body.username || !req.body.password) {
+        throw { name: "400", message: "Please input Username and Password" }
       }
-      const { username, password, email } = req.body
-      let userObj = { username, password, email }
+      const { username, password } = req.body
+      let userObj = { username, password }
       let result = await User.create(userObj)
       res.status(201).json({
         id: result.id,
-        username: result.username,
-        email: result.email
+        username: result.username
       })
     } catch (err) {
       next(err)
@@ -57,16 +55,11 @@ class AuthController {
 
   static async login(req, res, next) {
     try {
-      if (!req.body.userinput || !req.body.password) {
-        throw { name: "400", message: "Please provide username/email and Password" }
+      if (!req.body.username || !req.body.password) {
+        throw { name: "400", message: "Please provide Username and Password" }
       }
       let searchOptions = {
-        username: req.body.userinput
-      }
-      if(req.body.userinput.includes('@')){
-        searchOptions = {
-          email: req.body.userinput
-        }
+        username: req.body.username
       }
       let passwordInput = req.body.password
       let user = await User.findOne(
@@ -75,13 +68,14 @@ class AuthController {
         }
       )
       if (user && HashingHelper.comparePassword(passwordInput, user.password)) {
-        let tokenPayload = { id: user.id, username: user.username, email: user.email }
+        let tokenPayload = { id: user.id, username: user.username, }
         let access_token = TokenHelper.signPayload(tokenPayload)
         res.status(200).json({ access_token })
       } else {
         throw { name: "400", message: "User or Password is Incorrect" }
       }
     } catch (err) {
+      console.log(err)
       next(err)
     }
   }

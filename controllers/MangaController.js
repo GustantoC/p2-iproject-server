@@ -1,66 +1,77 @@
 const { User, MangaUser, Manga } = require('../models')
 const axios = require('axios')
-class MangaController {
-  static async topMangas(req, res, next) {
-    try {
-      let listMangas = []
-      await axios({
-        method: 'GET',
-        url: 'https://api.jikan.moe/v3/top/manga/1/'
-      })
-        .then(({ data }) => {
-          listMangas = data.top
-          listMangas = listMangas.map((manga) => {
-            let currStatus = 'ongoing'
-            if (manga.end_date) {
-              currStatus = 'completed'
-            }
-            return {
-              MalId: manga.mal_id,
-              title: manga.title,
-              imageUrl: manga.image_url,
-              status: currStatus,
-              score: manga.score
-            }
-          })
 
-          Manga.bulkCreate(listMangas)
+
+
+class MangaController {
+  static async getMangaQuery(req, res, next) {
+    try {
+      let urlSearch = `https://api.mangadex.org/manga?order[followedCount]=desc&contentRating[]=safe&includes[]=cover_art&limit=50`
+      let { title } = req.body
+      if (title) {
+        urlSearch += `&title=${title}`
+      }
+      let listMangas = []
+      let resp = await axios({
+        method: 'GET',
+        url: urlSearch
+      })
+      listMangas = resp.data.data
+
+      listMangas = listMangas.map((manga) => {
+        let getImageName = manga.relationships.map((rel) => {
+          if (rel.type == 'cover_art') {
+            return rel.attributes.fileName
+          }
         })
-        .catch(({ response }) => {
-          console.log(response.data);
-        })
-      res.status(200).json({ message: "Top 50 manga inserted successfully" })
+        getImageName = getImageName.filter(function (element) {
+          return element !== undefined;
+        });
+        return {
+          id: manga.id,
+          title: manga.attributes.title.en,
+          imageUrl: `https://uploads.mangadex.org/covers/${manga.id}/${getImageName[0]}`,
+          status: manga.attributes.status,
+          MalId: Number(manga.attributes.links.mal)
+        }
+      })
+      res.status(200).json(listMangas)
     } catch (error) {
+      console.log("ERROR:", error)
       next(error)
     }
   }
 
-  static async insertNewManga(req, res, next) {
+  static async getTop50(req, res, next) {
     try {
-      let { mal_id } = req.body
-      let resp = await axios({
+      let { subtype } = req.params
+      subtype = subtype || "airing"
+      let urlSearch = `https://api.jikan.moe/v3/top/anime/1/${subtype}`
+      let listAnimes = await axios({
         method: 'GET',
-        url: `https://api.jikan.moe/v3/manga/${Number(mal_id)}`
+        url: urlSearch
       })
-      let mangaData = resp.data
-      let newManga = {
-        MalId: mangaData.mal_id,
-        title: mangaData.title,
-        imageUrl: mangaData.image_url,
-        status: mangaData.publishing ? 'ongoing' : 'completed',
-        score: mangaData.score
-      }
-      let insertManga = await Manga.create(newManga)
-      res.status(201).json({message: "Manga inserted successfully", mangaDetail: newManga})
-    } catch (error) {
-      console.log(error)
-      if (error.isAxiosError) {
-        if(error.response.status == 404){
-          error = { name: "404", message: "Manga not found" }
+      listAnimes = listAnimes.data.top
+      listAnimes = listAnimes.map((anime) => {
+        return {
+          MalId: anime.mal_id,
+          title: anime.title,
+          imageUrl: anime.image_url,
+          score: anime.score
         }
-      }
+      })
+      res.status(200).json(listAnimes)
+    } catch (error) {
+      console.log("ERROR:", error)
       next(error)
     }
+  }
+
+  static async getAnimeDetail(req,res,next) {
+    
+  }
+  static async addToBookmark(req,res,next) {
+
   }
 }
 
