@@ -58,13 +58,12 @@ class AuthController {
       if (!req.body.username || !req.body.password) {
         throw { name: "400", message: "Please provide Username and Password" }
       }
-      let searchOptions = {
-        username: req.body.username
-      }
       let passwordInput = req.body.password
       let user = await User.findOne(
         {
-          where: searchOptions
+          where: {
+            username: req.body.username
+          }
         }
       )
       if (user && HashingHelper.comparePassword(passwordInput, user.password)) {

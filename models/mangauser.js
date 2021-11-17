@@ -15,8 +15,39 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   MangaUser.init({
-    UserId: DataTypes.INTEGER,
-    MalId: DataTypes.INTEGER
+    UserId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
+    },
+    MalId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        checkPickedByUser(value, next) {
+          MangaUser.findOne({ where: { UserId: this.UserId, MalId: value } })
+            .then((data) => {
+              if (data) {
+                return next('User already picked this manga/anime');
+              } else {
+                return next()
+              }
+            })
+            .catch(function (err) {
+              return next(err);
+            });
+        }
+      }
+    },
+    type:{
+      type: DataTypes.STRING,
+      allowNull: false,
+    }
   }, {
     sequelize,
     modelName: 'MangaUser',
