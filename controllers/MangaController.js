@@ -68,10 +68,10 @@ class MangaController {
   }
 
   static async getAnimeDetail(req,res,next) {
-
+    
   }
   static async addToBookmark(req,res,next) {
-    
+
   }
 }
 
