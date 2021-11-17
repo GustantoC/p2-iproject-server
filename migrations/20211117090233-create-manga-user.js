@@ -10,15 +10,11 @@ module.exports = {
       },
       UserId: {
         allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Users',
-          key: 'id'
-        }
-      },
-      MalId: {
-        allowNull: false,
         type: Sequelize.INTEGER
+      },
+      DexId: {
+        allowNull: false,
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,

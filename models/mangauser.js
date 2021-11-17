@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       MangaUser.belongsTo(models.User, { foreignKey: 'UserId' });
-      // MangaUser.belongsTo(models.Manga, { uniqueKey: 'MalId' });
+      MangaUser.belongsTo(models.Anime, { foreignKey: 'animeId' });
     }
   };
   MangaUser.init({
@@ -25,15 +25,15 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
     },
-    MalId: {
-      type: DataTypes.INTEGER,
+    DexId: {
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         checkPickedByUser(value, next) {
-          MangaUser.findOne({ where: { UserId: this.UserId, MalId: value } })
+          MangaUser.findOne({ where: { UserId: this.UserId, DexId: value } })
             .then((data) => {
               if (data) {
-                return next('User already picked this manga/anime');
+                return next('User already picked this manga');
               } else {
                 return next()
               }
@@ -44,9 +44,8 @@ module.exports = (sequelize, DataTypes) => {
         }
       }
     },
-    type:{
-      type: DataTypes.STRING,
-      allowNull: false,
+    animeId: {
+      type: DataTypes.INTEGER,
     }
   }, {
     sequelize,

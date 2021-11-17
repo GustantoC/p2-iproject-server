@@ -2,15 +2,9 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('MangaUsers', 'type', {
-      type: Sequelize.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Please input type'
-        }
-      }
-    });
+    await queryInterface.addColumn('MangaUsers', 'animeId', {
+      type: Sequelize.INTEGER
+    })
     /**
      * Add altering commands here.
      *
@@ -20,7 +14,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('MangaUsers', 'type');
+    await queryInterface.removeColumn('MangaUsers', 'animeId')
     /**
      * Add reverting commands here.
      *

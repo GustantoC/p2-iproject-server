@@ -1,5 +1,6 @@
-const { User, MangaUser } = require('../models')
+const { User, MangaUser, Anime } = require('../models')
 const axios = require('axios')
+const { Op } = require("sequelize");
 
 
 
@@ -7,10 +8,13 @@ class MangaController {
   static async getMangaQuery(req, res, next) {
     try {
       let urlSearch = `https://api.mangadex.org/manga?order[followedCount]=desc&contentRating[]=safe&includes[]=cover_art&limit=50`
-      let { title } = req.body
+      let { title } = req.query
       if (title) {
-        urlSearch += `&title=${title}`
+        urlSearch += `&title=${title}&limit=10`
+      } else {
+        urlSearch += `&limit=50`
       }
+      console.log(urlSearch);
       let listMangas = []
       let resp = await axios({
         method: 'GET',
@@ -31,8 +35,7 @@ class MangaController {
           id: manga.id,
           title: manga.attributes.title.en || manga.attributes.title.jp,
           imageUrl: `https://uploads.mangadex.org/covers/${manga.id}/${getImageName[0]}`,
-          status: manga.attributes.status,
-          MalId: Number(manga.attributes.links.mal)
+          status: manga.attributes.status
         }
       })
       res.status(200).json(listMangas)
@@ -42,22 +45,30 @@ class MangaController {
     }
   }
 
-  static async getTop50(req, res, next) {
+  static async getAnime(req, res, next) {
     try {
       let { subtype } = req.params
+      let { title } = req.query
       subtype = subtype || "airing"
       let urlSearch = `https://api.jikan.moe/v3/top/anime/1/${subtype}`
+      if (title) {
+        urlSearch = `https://api.jikan.moe/v3/search/anime/1?q=${title}&limit=10`
+      }
+      console.log(urlSearch)
       let listAnimes = await axios({
         method: 'GET',
         url: urlSearch
       })
-      listAnimes = listAnimes.data.top
+      if (title) {
+        listAnimes = listAnimes.data.results
+      } else {
+        listAnimes = listAnimes.data.top
+      }
       listAnimes = listAnimes.map((anime) => {
         return {
           MalId: anime.mal_id,
           title: anime.title,
-          imageUrl: anime.image_url,
-          score: anime.score
+          imageUrl: anime.image_url
         }
       })
       res.status(200).json(listAnimes)
@@ -67,48 +78,182 @@ class MangaController {
   }
 
   static async getDetail(req, res, next) {
+    let detailSend = {}
     try {
-      let { MalId, type } = req.params
-      let urlSearch = `https://api.jikan.moe/v3/${type}/${MalId}`
-      let dataSearch = await axios({
-        method: 'GET',
-        url: urlSearch
-      })
-      dataSearch = dataSearch.data
-      let genreList = []
-      dataSearch.genres.forEach((genre) => {
-        genreList.push(genre.name)
-      })
-      dataSearch = {
-        MalId: dataSearch.mal_id,
-        type: type,
-        title: dataSearch.title,
-        imageUrl: dataSearch.image_url,
-        status: dataSearch.status,
-        synopsis: dataSearch.synopsis,
-        genreList: genreList
+      let { type, id } = req.params
+      if (type == 'manga') {
+        let urlSearch = `https://api.mangadex.org/manga/${id}?includes[]=cover_art`
+        let dataSearch = await axios({
+          method: 'GET',
+          url: urlSearch
+        })
+        dataSearch = dataSearch.data.data
+        let genreList = []
+        dataSearch.attributes.tags.forEach((genre) => {
+          if (genre.attributes.group == "genre") {
+            genreList.push(genre.attributes.name.en)
+          }
+        })
+        let getImageName = dataSearch.relationships.map((rel) => {
+          if (rel.type == 'cover_art') {
+            return rel.attributes.fileName
+          }
+        })
+        getImageName = getImageName.filter(function (element) {
+          return element !== undefined;
+        });
+        detailSend = {
+          id: dataSearch.id,
+          type: type,
+          title: dataSearch.attributes.title.jp || dataSearch.attributes.title.en,
+          imageUrl: `https://uploads.mangadex.org/covers/${dataSearch.id}/${getImageName[0]}`,
+          status: dataSearch.attributes.status,
+          synopsis: dataSearch.attributes.description.en,
+          genreList: genreList
+        }
+      } else {
+        let urlSearch = `https://api.jikan.moe/v3/anime/${id}`
+        let getAnime = await axios({
+          method: 'GET',
+          url: urlSearch
+        })
+        getAnime = getAnime.data
+        let genreList = []
+        getAnime.genres.forEach((genre) => {
+          genreList.push(genre.name)
+        })
+        detailSend = {
+          id: getAnime.mal_id,
+          type: type,
+          title: getAnime.title,
+          imageUrl: getAnime.image_url,
+          status: getAnime.status,
+          synopsis: getAnime.synopsis,
+          genreList: genreList
+        }
       }
-      res.status(200).json(dataSearch)
+      res.status(200).json(detailSend)
     } catch (error) {
       console.log(error)
-      next(error)
+      if (error.isAxiosError) {
+        next({ name: "404", message: "Manga/anime not found" })
+      } else {
+        next(error)
+      }
     }
   }
-  static async addToBookmark(req, res, next) {
+  static async addToMyList(req, res, next) {
     try {
-      let { MalId, type } = req.params
-      let urlSearch = `https://api.jikan.moe/v3/${type}/${MalId}`
-      let dataSearch = await axios({
+      let { type, id } = req.params
+      let UserList = {}
+      if (type == 'anime') {
+        let urlSearch = `https://api.jikan.moe/v3/anime/${id}`
+        let getAnime = await axios({
+          method: 'GET',
+          url: urlSearch
+        })
+        getAnime = getAnime.data
+        let newAnimeObj = {
+          title: getAnime.title,
+          imageUrl: getAnime.image_url,
+          synopsis: getAnime.synopsis,
+        }
+        let insertToDB = await Anime.create(newAnimeObj)
+        UserList = {
+          UserId: req.user.id,
+          DexId: getAnime.mal_id.toString(),
+          animeId: insertToDB.id
+        }
+      } else {
+        let urlSearch = `https://api.mangadex.org/manga/${id}`
+        let dataSearch = await axios({
+          method: 'GET',
+          url: urlSearch
+        })
+        dataSearch = dataSearch.data.data
+        UserList = {
+          UserId: req.user.id,
+          DexId: dataSearch.id,
+          animeId: null
+        }
+      }
+      let response = await MangaUser.create(UserList)
+
+      res.status(200).json({ id: response.id, UserId: response.UserId, DexId: response.DexId, animeId: response.animeId })
+    } catch (error) {
+      console.log(error)
+      if (error.isAxiosError) {
+        next({ name: "404", message: "Manga/anime not found" })
+      } else {
+        next(error)
+      }
+    }
+  }
+  static async getMyList(req, res, next) {
+    try {
+      let myMangas = []
+      let myAnimes = []
+      let getAllDexId = await MangaUser.findAll({
+        where: {
+          UserId: req.user.id,
+          animeId: null
+        }
+      })
+      let urlSearch = `https://api.mangadex.org/manga?contentRating[]=safe&includes[]=cover_art&limit=50`
+      getAllDexId.forEach((manga) => {
+        urlSearch += `&ids[]=${manga.DexId}`
+      })
+      console.log(urlSearch)
+      let resp = await axios({
         method: 'GET',
         url: urlSearch
       })
-      dataSearch = dataSearch.data
-      let response = await MangaUser.create({
-        UserId: req.user.id,
-        MalId: dataSearch.mal_id,
-        type: type
+      myMangas = resp.data.data
+      myMangas = myMangas.map((manga) => {
+        let getImageName = manga.relationships.map((rel) => {
+          if (rel.type == 'cover_art') {
+            return rel.attributes.fileName
+          }
+        })
+        getImageName = getImageName.filter(function (element) {
+          return element !== undefined;
+        });
+        return {
+          id: manga.id,
+          title: manga.attributes.title.en || manga.attributes.title.jp,
+          imageUrl: `https://uploads.mangadex.org/covers/${manga.id}/${getImageName[0]}`,
+          synopsis: manga.attributes.description.en
+        }
       })
-      res.status(200).json({ id: response.id, UserId: response.UserId, MalId: response.MalId, status: response.status })
+
+      let getAllAnimeId = await MangaUser.findAll({
+        where: {
+          UserId: req.user.id,
+          animeId: {
+            [Op.not]: null,
+          }
+        }
+      })
+      let animeIds = []
+      getAllAnimeId.forEach((anime) => {
+        animeIds.push(anime.animeId)
+      })
+      myAnimes = await Anime.findAll({
+        where: {
+          id: {
+            [Op.in]: animeIds
+          }
+        }
+      })
+      myAnimes = myAnimes.map((anime) => {
+        return {
+          id: anime.id,
+          title: anime.title,
+          imageUrl: anime.imageUrl,
+          status: anime.synopsis
+        }
+      })
+      res.status(200).json({ myMangas: myMangas, myAnimes: myAnimes })
     } catch (error) {
       if (error.isAxiosError) {
         next({ name: "404", message: "Manga/anime not found" })
