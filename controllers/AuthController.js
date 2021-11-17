@@ -74,7 +74,6 @@ class AuthController {
         throw { name: "400", message: "User or Password is Incorrect" }
       }
     } catch (err) {
-      console.log(err)
       next(err)
     }
   }

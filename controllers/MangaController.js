@@ -14,7 +14,6 @@ class MangaController {
       } else {
         urlSearch += `&limit=50`
       }
-      console.log(urlSearch);
       let listMangas = []
       let resp = await axios({
         method: 'GET',
@@ -53,7 +52,6 @@ class MangaController {
       if (title) {
         urlSearch = `https://api.jikan.moe/v3/search/anime?q=${title}&limit=10`
       }
-      console.log(urlSearch)
       let listAnimes = await axios({
         method: 'GET',
         url: urlSearch
@@ -63,7 +61,6 @@ class MangaController {
       } else {
         listAnimes = listAnimes.data.top
       }
-      console.log(listAnimes);
       listAnimes = listAnimes.map((anime) => {
         return {
           MalId: anime.mal_id,
@@ -184,7 +181,6 @@ class MangaController {
 
       res.status(200).json({ id: response.id, UserId: response.UserId, DexId: response.DexId, animeId: response.animeId })
     } catch (error) {
-      console.log(error)
       if (error.isAxiosError) {
         next({ name: "404", message: "Manga/anime not found" })
       } else {
@@ -206,7 +202,6 @@ class MangaController {
       getAllDexId.forEach((manga) => {
         urlSearch += `&ids[]=${manga.DexId}`
       })
-      console.log(urlSearch)
       let resp = await axios({
         method: 'GET',
         url: urlSearch

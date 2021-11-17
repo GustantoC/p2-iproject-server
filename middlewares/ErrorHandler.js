@@ -1,5 +1,4 @@
 function ErrorHandler(err, req, res, next) {
-  console.log(err.name)
   switch (err.name) {
     case "SequelizeValidationError":
       err.message = err.message.split(": ")[1]
