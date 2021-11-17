@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   Anime.init({
     title: DataTypes.STRING,
     imageUrl: DataTypes.STRING,
-    synopsis: DataTypes.TEXT
+    synopsis: DataTypes.TEXT,
+    MalId: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Anime',

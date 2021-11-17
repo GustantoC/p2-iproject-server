@@ -159,6 +159,7 @@ class MangaController {
           title: getAnime.title,
           imageUrl: getAnime.image_url,
           synopsis: getAnime.synopsis,
+          MalId: getAnime.mal_id,
         }
         let insertToDB = await Anime.create(newAnimeObj)
         UserList = {
@@ -250,9 +251,10 @@ class MangaController {
       myAnimes = myAnimes.map((anime) => {
         return {
           id: anime.id,
+          MalId: anime.MalId,
           title: anime.title,
           imageUrl: anime.imageUrl,
-          status: anime.synopsis
+          synopsis: anime.synopsis
         }
       })
       res.status(200).json({ myMangas: myMangas, myAnimes: myAnimes })

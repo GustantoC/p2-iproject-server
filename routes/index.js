@@ -6,9 +6,6 @@ const ErrorHandler = require('../middlewares/ErrorHandler')
 
 
 
-/**
- * Documentation if you can
- */
 router.post('/login', AuthController.login)
 router.post('/register', AuthController.register)
 router.get('/getAnime/:subtype',MangaController.getAnime)
