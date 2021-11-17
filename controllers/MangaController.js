@@ -40,7 +40,6 @@ class MangaController {
       })
       res.status(200).json(listMangas)
     } catch (error) {
-      console.log("ERROR:", error)
       next(error)
     }
   }
@@ -52,7 +51,7 @@ class MangaController {
       subtype = subtype || "airing"
       let urlSearch = `https://api.jikan.moe/v3/top/anime/1/${subtype}`
       if (title) {
-        urlSearch = `https://api.jikan.moe/v3/search/anime/1?q=${title}&limit=10`
+        urlSearch = `https://api.jikan.moe/v3/search/anime?q=${title}&limit=10`
       }
       console.log(urlSearch)
       let listAnimes = await axios({
@@ -64,6 +63,7 @@ class MangaController {
       } else {
         listAnimes = listAnimes.data.top
       }
+      console.log(listAnimes);
       listAnimes = listAnimes.map((anime) => {
         return {
           MalId: anime.mal_id,
@@ -73,7 +73,11 @@ class MangaController {
       })
       res.status(200).json(listAnimes)
     } catch (error) {
-      next(error)
+      if (error.isAxiosError && error.response.status == 503) {
+        next({ name: "503", message: "Anime fetching failed please try again later" })
+      } else {
+        next(error)
+      }
     }
   }
 
@@ -134,7 +138,6 @@ class MangaController {
       }
       res.status(200).json(detailSend)
     } catch (error) {
-      console.log(error)
       if (error.isAxiosError) {
         next({ name: "404", message: "Manga/anime not found" })
       } else {

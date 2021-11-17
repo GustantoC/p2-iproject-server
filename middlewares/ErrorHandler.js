@@ -22,6 +22,10 @@ function ErrorHandler(err, req, res, next) {
       err.message = err.message || "Data not Found"
       res.status(404).json({ message: err.message })
       break;
+    case "503":
+      err.message = err.message || "Data not Found"
+      res.status(503).json({ message: err.message })
+      break;
     default:
       res.status(500).json({ message: "Internal Server Error" })
       break;

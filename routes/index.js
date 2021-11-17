@@ -17,7 +17,6 @@ router.get('/getAnime/:subtype',MangaController.getAnime)
 router.get('/getManga',MangaController.getMangaQuery)
 router.get('/getDetail/:type/:id',MangaController.getDetail)
 
-
 router.use(Authenticate)
 router.post('/addToMyList/:type/:id', MangaController.addToMyList)
 router.get('/myList', MangaController.getMyList)
