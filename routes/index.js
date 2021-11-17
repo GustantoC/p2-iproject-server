@@ -10,9 +10,7 @@ const ErrorHandler = require('../middlewares/ErrorHandler')
  * Documentation if you can
  */
 router.post('/login', AuthController.login)
-router.post('/google-signin', AuthController.verifyGoogle)
 router.post('/register', AuthController.register)
-router.get('/verifyToken', AuthController.verifyToken)
 router.get('/getAnime/:subtype',MangaController.getAnime)
 router.get('/getManga',MangaController.getMangaQuery)
 router.get('/getDetail/:type/:id',MangaController.getDetail)

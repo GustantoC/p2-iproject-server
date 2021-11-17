@@ -112,7 +112,7 @@ class MangaController {
           synopsis: dataSearch.attributes.description.en,
           genreList: genreList
         }
-      } else {
+      } else if (type == 'anime') {
         let urlSearch = `https://api.jikan.moe/v3/anime/${id}`
         let getAnime = await axios({
           method: 'GET',
@@ -132,6 +132,8 @@ class MangaController {
           synopsis: getAnime.synopsis,
           genreList: genreList
         }
+      } else {
+        throw { name: "400", message: "Undefined type parameter" }
       }
       res.status(200).json(detailSend)
     } catch (error) {
@@ -164,7 +166,7 @@ class MangaController {
           DexId: getAnime.mal_id.toString(),
           animeId: insertToDB.id
         }
-      } else {
+      } else if (type == 'manga') {
         let urlSearch = `https://api.mangadex.org/manga/${id}`
         let dataSearch = await axios({
           method: 'GET',
@@ -176,6 +178,8 @@ class MangaController {
           DexId: dataSearch.id,
           animeId: null
         }
+      } else {
+        throw { name: "400", message: "Undefined type parameter" }
       }
       let response = await MangaUser.create(UserList)
 
