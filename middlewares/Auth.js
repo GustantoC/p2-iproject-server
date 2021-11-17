@@ -8,14 +8,13 @@ async function Auth(req, res, next) {
     if (!response) {
       throw { name: "401", message: null }
     }
-    let getUser = await User.findOne({ where: { email: response.email } })
+    let getUser = await User.findOne({ where: { username: response.username } })
     if (!getUser) {
       throw { name: "401", message: "Invalid input/password" }
     }
     req.user = {
       id: getUser.id,
-      username: getUser.username,
-      email: getUser.email
+      username: getUser.username
     }
     next()
   } catch (error) {
