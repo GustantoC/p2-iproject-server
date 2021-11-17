@@ -44,24 +44,6 @@ module.exports = (sequelize, DataTypes) => {
           msg: 'Please input password'
         }
       }
-    },
-    email:{
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: {
-        msg: 'Email already used'
-      },
-      validate: {
-        notEmpty: {
-          msg: 'Please input email'
-        },
-        notNull: {
-          msg: 'Please input email'
-        },
-        isEmail: {
-          msg: 'Invalid email format'
-        }
-      }
     }
   }, {
     hooks: {

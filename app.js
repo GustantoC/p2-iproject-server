@@ -1,7 +1,6 @@
 // if (process.env.NODE_ENV === 'production') {
   require('dotenv').config()
 // }
-var CronJob = require('cron').CronJob;
 const express = require('express')
 const cors = require('cors')
 const router = require('./routes');
@@ -14,16 +13,6 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 app.use('/', router)
-
-var job = new CronJob({
-  cronTime: '0 1 * * *', 
-  onTick: function () {
-    // every 24 hours
-  },
-  start: true,
-  timezone: "America/Sao_Paulo"
-});
-
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:port`)
 })

@@ -11,9 +11,13 @@ router.post('/login', AuthController.login)
 router.post('/google-signin', AuthController.verifyGoogle)
 router.post('/register', AuthController.register)
 router.get('/verifyToken', AuthController.verifyToken)
-router.get('/top50Mangas',MangaController.topMangas)
+router.get('/getAnime/:subtype',MangaController.getTop50)
+router.get('/getManga',MangaController.getMangaQuery)
+router.get('/getDetail/:MalId',MangaController.getMangaQuery)
+
+
 router.use(Authenticate)
-router.post('/insertManga',MangaController.insertNewManga)
+router.post('/addToBookmark/:MalId', MangaController.addToBookmark)
 router.use(ErrorHandler)
 
 module.exports = router
